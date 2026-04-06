@@ -1,1 +1,1 @@
-# ZenithOS
+# ZenixOS
