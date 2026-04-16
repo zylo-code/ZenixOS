@@ -2,6 +2,7 @@
 #include "include/stddef.h"
 #include "include/stdbool.h"
 #include "boot/limine.h"
+#include "terminal/terminal.h"
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -42,14 +43,35 @@ void kmain(void) {
 
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
 
-    volatile uint32_t *fb_ptr = framebuffer->address;
-    for (size_t y = 0; y < framebuffer->height; y++) {
-        for (size_t x = 0; x < framebuffer->width; x++) {
-            uint32_t nX = x * 255 / framebuffer->width;
-            uint32_t nY = y * 255 / framebuffer->height;
-            fb_ptr[y * (framebuffer->pitch / 4) + x] = (nY << 8) | nX;
-        }
-    }
+    terminal_init(framebuffer);
+
+    terminal_set_color(0x00FF00, 0x000000);
+    terminal_writeln("=========================================");
+    terminal_writeln("       My Operating System v0.1         ");
+    terminal_writeln("=========================================");
+    terminal_writeln("");
+
+    terminal_set_color(0xFFFFFF, 0x000000);
+    terminal_write("[INFO] Framebuffer: ");
+    terminal_write("OK");
+    terminal_writeln("");
+
+    terminal_write("[INFO] Resolution: ");
+    terminal_write("1024x768");
+    terminal_writeln("");
+
+    terminal_write("[INFO] Terminal size: ");
+    terminal_write("80x25");
+    terminal_writeln("");
+    terminal_writeln("");
+
+    terminal_set_color(0x00AAFF, 0x000000);
+    terminal_writeln("> System ready.");
+    terminal_writeln("> Type 'help' for available commands.");
+    terminal_writeln("");
+
+    terminal_set_color(0xFFFFFF, 0x000000);
+    terminal_write("user@zenixos:~$ ");
 
     hcf();
 }
