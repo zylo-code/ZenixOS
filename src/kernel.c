@@ -2,7 +2,7 @@
 #include "include/stddef.h"
 #include "include/stdbool.h"
 #include "boot/limine.h"
-#include "terminal/terminal.h"
+#include "drivers/terminal/terminal.h"
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);

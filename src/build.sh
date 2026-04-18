@@ -16,11 +16,15 @@ fi
 
 gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
     -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c memory.c -o build/memory.o
+    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/memory.c -o build/memory.o
 
 gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
     -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c terminal/terminal.c -o build/terminal.o
+    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/terminal/terminal.c -o build/terminal.o
+
+gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
+    -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
+    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/keyboard/keyboard.c -o build/keyboard.o
 
 # Проверка успешности компиляции
 if [ $? -ne 0 ]; then
@@ -29,7 +33,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # Линковка
-ld -m elf_x86_64 -nostdlib -static -z max-page-size=0x1000 --gc-sections -T linker.ld  build/kernel.o build/memory.o build/terminal.o -o iso_root/kernel
+ld -m elf_x86_64 -nostdlib -static -z max-page-size=0x1000 --gc-sections -T linker.ld \
+    build/kernel.o build/memory.o build/terminal.o build/keyboard.o -o iso_root/kernel
 
 if [ $? -ne 0 ]; then
     echo "Linking failed!"
