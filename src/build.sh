@@ -1,12 +1,19 @@
 #!/bin/bash
 
+set -e
+
+# Always run from the script directory so relative paths work.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # Очистка предыдущих сборок
 rm -f build/* iso_root/kernel
 
 # Компиляция
-gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
-    -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c kernel.c -o build/kernel.o
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c kernel.c -o build/kernel.o
 
 # Проверка успешности компиляции
 if [ $? -ne 0 ]; then
@@ -14,17 +21,30 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
-    -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/memory.c -o build/memory.o
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c system/memory.c -o build/memory.o
 
-gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
-    -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/terminal/terminal.c -o build/terminal.o
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c drivers/terminal/terminal.c -o build/terminal.o
 
-gcc -g -O2 -pipe -Wall -Wextra -std=gnu11 -nostdinc -ffreestanding -fno-stack-protector -fno-stack-check \
-    -fno-lto -fno-PIC -ffunction-sections -fdata-sections -m64 -march=x86-64 -mabi=sysv -mno-80387 -mno-mmx \
-    -mno-sse -mno-sse2 -mno-red-zone -mcmodel=kernel -I boot -MMD -MP -c drivers/keyboard/keyboard.c -o build/keyboard.o
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c drivers/keyboard/keyboard.c -o build/keyboard.o
+
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c io/io.c -o build/io.o
+
+gcc -ffreestanding -O2 -Wall -Wextra -fno-exceptions -std=c11 \
+    -Isrc -Isrc/drivers -Isrc/shell -Isrc/boot/limine \
+    -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
+    -fno-stack-protector -fno-pic -g -c shell/shell.c -o build/shell.o
 
 # Проверка успешности компиляции
 if [ $? -ne 0 ]; then
@@ -33,8 +53,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # Линковка
-ld -m elf_x86_64 -nostdlib -static -z max-page-size=0x1000 --gc-sections -T linker.ld \
-    build/kernel.o build/memory.o build/terminal.o build/keyboard.o -o iso_root/kernel
+ld -nostdlib -z max-page-size=0x1000 -T linker.ld \
+    build/*.o -o iso_root/kernel
 
 if [ $? -ne 0 ]; then
     echo "Linking failed!"

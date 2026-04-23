@@ -3,6 +3,9 @@
 #include "include/stdbool.h"
 #include "boot/limine.h"
 #include "drivers/terminal/terminal.h"
+#include "drivers/keyboard/keyboard.h"
+#include "shell/shell.h"
+#include "io/io.h"
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -22,11 +25,11 @@ static volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARK
 static void hcf(void) {
     for (;;) {
 #if defined (__x86_64__)
-        asm ("hlt");
+        __asm__ ("hlt");
 #elif defined (__aarch64__) || defined (__riscv)
-        asm ("wfi");
+        __asm__ ("wfi");
 #elif defined (__loongarch64)
-        asm ("idle 0");
+        __asm__ ("idle 0");
 #endif
     }
 }
@@ -44,10 +47,11 @@ void kmain(void) {
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
 
     terminal_init(framebuffer);
+    shell_init();
 
     terminal_set_color(0x00FF00, 0x000000);
     terminal_writeln("=========================================");
-    terminal_writeln("       My Operating System v0.1         ");
+    terminal_writeln("       ZenixOS v0.0.1         ");
     terminal_writeln("=========================================");
     terminal_writeln("");
 
@@ -73,5 +77,14 @@ void kmain(void) {
     terminal_set_color(0xFFFFFF, 0x000000);
     terminal_write("user@zenixos:~$ ");
 
-    hcf();
+    while(1) {
+        if (inb(0x64) & 1) {
+            keyboard_handler();
+        }
+#if defined (__x86_64__)
+        __asm__ volatile ("pause");
+#endif
+    }
+
+    // hcf();
 }

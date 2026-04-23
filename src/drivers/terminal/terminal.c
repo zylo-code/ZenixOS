@@ -1,5 +1,5 @@
 #include "terminal.h"
-#include "../include/font.h"
+#include "../../include/font.h"
 
 static struct {
     struct limine_framebuffer *fb;
@@ -15,8 +15,20 @@ static struct {
     size_t rows;
 } term;
 
+static void clear_cell(size_t x, size_t y) {
+    for (size_t row = 0; row < 16; row++) {
+        for (size_t col = 0; col < 8; col++) {
+            size_t px_x = x * 8 + col;
+            size_t px_y = y * 16 + row;
+            if (px_x < term.width && px_y < term.height) {
+                term.buffer[px_y * (term.pitch / 4) + px_x] = term.bg_color;
+            }
+        }
+    }
+}
+
 static void draw_char(char c, size_t x, size_t y, uint32_t fg, uint32_t bg) {
-    if (c < 32 || c > 127) c = '?';
+    if ((unsigned char)c < 32 || (unsigned char)c > 127) c = '?';
 
     for (size_t row = 0; row < 16; row++) {
         uint8_t line = font8x16[(uint8_t)c][row];
@@ -39,21 +51,18 @@ static void draw_char(char c, size_t x, size_t y, uint32_t fg, uint32_t bg) {
 }
 
 static void terminal_scroll(void) {
-    for (size_t y = 1; y < term.rows; y++) {
-        for (size_t x = 0; x < term.cols; x++) {
+    size_t line_height = 16;
+    size_t stride = term.pitch / 4;
 
+    for (size_t y = line_height; y < term.height; y++) {
+        for (size_t x = 0; x < term.width; x++) {
+            term.buffer[(y - line_height) * stride + x] = term.buffer[y * stride + x];
         }
     }
 
-    for (size_t x = 0; x < term.cols; x++) {
-        for (size_t row = 0; row < 16; row++) {
-            for (size_t col = 0; col < 8; col++) {
-                size_t px_x = x * 8 + col;
-                size_t px_y = (term.rows - 1) * 16 + row;
-                if (px_x < term.width && px_y < term.height) {
-                    term.buffer[px_y * (term.pitch / 4) + px_x] = term.bg_color;
-                }
-            }
+    for (size_t y = term.height - line_height; y < term.height; y++) {
+        for (size_t x = 0; x < term.width; x++) {
+            term.buffer[y * stride + x] = term.bg_color;
         }
     }
 
@@ -94,11 +103,11 @@ void terminal_putchar(char c) {
     } else if (c == '\r') {
         term.cursor_x = 0;
     } else if (c == '\t') {
-        term.cursor_x = (term.cursor_x + 4) & -3;
+        term.cursor_x = (term.cursor_x + 4) & ~(size_t)3;
     } else if (c == '\b') {
         if (term.cursor_x > 0) {
             term.cursor_x--;
-            draw_char(' ', term.cursor_x, term.cursor_y, term.fg_color, term.bg_color);
+            clear_cell(term.cursor_x, term.cursor_y);
         }
     } else {
         draw_char(c, term.cursor_x, term.cursor_y, term.fg_color, term.bg_color);

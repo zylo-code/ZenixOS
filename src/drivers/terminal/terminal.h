@@ -4,7 +4,7 @@
 #include "../include/stdint.h"
 #include "../include/stddef.h"
 #include "../include/stdbool.h"
-#include "../boot/limine.h"
+#include "../../boot/limine.h"
 
 void terminal_init(struct limine_framebuffer *fb);
 void terminal_putchar(char c);
