@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/whoami/Projects/ZenixOS/src/drivers/keyboard",
-      "program": "/home/whoami/Projects/ZenixOS/src/drivers/keyboard/build/Debug/outDebug",
+      "cwd": "/home/whoami/Projects/ZenixOS/kernel/shell",
+      "program": "/home/whoami/Projects/ZenixOS/kernel/shell/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
