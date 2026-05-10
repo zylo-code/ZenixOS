@@ -1,0 +1,6 @@
+# Build System
+build/
+/build*/
+
+# VS Code
+.vscode/
